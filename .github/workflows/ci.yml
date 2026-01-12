@@ -36,7 +36,7 @@ jobs:
           pytest tests/ -v --cov --cov-report=xml --cov-report=term
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           file: ./backend/coverage.xml
           flags: backend
@@ -68,7 +68,7 @@ jobs:
         run: npm test -- --run --coverage
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           file: ./electron-app/coverage/coverage-final.json
           flags: frontend
