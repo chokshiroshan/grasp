@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm create electron-vite@latest electron-app -- --template react-ts)",
+      "Bash(npm install:*)",
+      "Bash(npm run build:*)",
+      "Bash(python3:*)",
+      "Bash(source venv/bin/activate)",
+      "Bash(pip install:*)",
+      "Bash(pytest:*)",
+      "Bash(npm test)",
+      "Bash(npm test:*)"
+    ]
+  }
+}

@@ -1,0 +1,95 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: write
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.create_release.outputs.id }}
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: Grasp ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          body: |
+            ## What's Changed
+
+            See the [CHANGELOG](CHANGELOG.md) for details.
+
+            ## Installation
+
+            ### macOS
+            Download `Grasp-${{ github.ref_name }}-mac.dmg`
+
+            ### Windows
+            Download `Grasp-${{ github.ref_name }}-win.exe`
+
+            ### Linux
+            Download `Grasp-${{ github.ref_name }}-linux.AppImage`
+
+  build-and-upload:
+    name: Build ${{ matrix.os }}
+    needs: create-release
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: macos-latest
+            artifact_name: Grasp-mac.dmg
+            asset_name: Grasp-${{ github.ref_name }}-mac.dmg
+          - os: ubuntu-latest
+            artifact_name: Grasp-linux.AppImage
+            asset_name: Grasp-${{ github.ref_name }}-linux.AppImage
+          - os: windows-latest
+            artifact_name: Grasp-win.exe
+            asset_name: Grasp-${{ github.ref_name }}-win.exe
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: electron-app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./electron-app
+        run: npm ci
+
+      - name: Build and package Electron app
+        working-directory: ./electron-app
+        run: |
+          npm run build
+          # Add packaging command here when electron-builder is configured
+          # npm run package
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./electron-app/dist/${{ matrix.artifact_name }}
+          asset_name: ${{ matrix.asset_name }}
+          asset_content_type: application/octet-stream
+        continue-on-error: true
