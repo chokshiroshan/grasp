@@ -15,4 +15,4 @@ isort==5.13.2
 
 # Security scanning
 bandit==1.7.6
-safety==2.3.5
+safety>=3.0.0
