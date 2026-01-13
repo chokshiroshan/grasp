@@ -9,7 +9,7 @@ This directory contains all CI/CD automation workflows for Grasp.
 | Workflow | File | Trigger | Purpose |
 |----------|------|---------|---------|
 | **CI** | `ci.yml` | Push/PR to main, develop | Run tests, lint, build |
-| **Release** | `release.yml` | Push tag `v*.*.*` | Create releases, build installers |
+| **Release** | `release.yml` | Push tag `v*.*.*` | Create releases, build web archives |
 | **Security** | `security.yml` | Weekly, Push to main | Security scanning |
 | **Dependabot** | `../dependabot.yml` | Weekly | Dependency updates |
 
@@ -19,7 +19,7 @@ All PRs must pass:
 - ✅ Backend Tests (Python 3.11, 3.12)
 - ✅ Frontend Tests (Node 20)
 - ✅ Linting (flake8, ESLint)
-- ✅ Build (Ubuntu, macOS, Windows)
+- ✅ Build (Web application)
 
 ### Creating a Release
 
@@ -35,7 +35,7 @@ git tag -a v1.0.0 -m "Release v1.0.0"
 git push origin v1.0.0
 
 # 4. Wait for workflows to complete
-# Installers will be attached to GitHub release
+# Web archives (tar.gz, zip) will be attached to GitHub release
 ```
 
 ### Manual Workflow Run
@@ -50,7 +50,7 @@ git push origin v1.0.0
 - **Actions Tab**: See all workflow runs
 - **Security Tab**: CodeQL analysis results
 - **Pull Requests**: See status checks on PRs
-- **Releases**: Download built installers
+- **Releases**: Download web build archives
 
 ## Configuration Files
 
@@ -67,9 +67,9 @@ backend/
 ├── pyproject.toml     # Black, isort, pytest config
 └── requirements-dev.txt
 
-electron-app/
-├── .eslintrc.json     # ESLint config
-├── .prettierrc        # Prettier config
+frontend/
+├── eslint.config.js   # ESLint config
+├── vite.config.ts     # Vite build config
 └── package.json       # npm scripts
 ```
 
@@ -85,10 +85,9 @@ flake8 .
 black --check .
 
 # Frontend
-cd electron-app
+cd frontend
 npm test -- --run
 npm run lint
-npm run type-check
 ```
 
 ## Resources
