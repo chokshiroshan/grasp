@@ -1,6 +1,6 @@
 # Grasp - AI-Powered YouTube Learning Platform
 
-An intelligent desktop application that transforms YouTube videos into interactive learning experiences. Chat with AI about video content, take timestamped notes, and get personalized study materials.
+An intelligent web application that transforms YouTube videos into interactive learning experiences. Chat with AI about video content, take timestamped notes, and get personalized study materials.
 
 ![Status](https://img.shields.io/badge/status-MVP-green)
 ![License](https://img.shields.io/badge/license-MIT-blue)
@@ -31,10 +31,10 @@ An intelligent desktop application that transforms YouTube videos into interacti
 ## Tech Stack
 
 **Frontend:**
-- Electron + React + TypeScript
+- Vite + React + TypeScript
 - Tailwind CSS for styling
 - Zustand for state management
-- React Query for data fetching
+- Axios for API communication
 
 **Backend:**
 - Python FastAPI
@@ -85,7 +85,7 @@ cp .env.example .env
 ### 3. Frontend Setup
 
 ```bash
-cd electron-app
+cd frontend
 
 # Install dependencies
 npm install
@@ -129,27 +129,30 @@ python main.py
 
 Server runs on `http://localhost:8000`
 
-### Start the Electron App
+### Start the Frontend Web App
 
 ```bash
-cd electron-app
+cd frontend
 npm run dev
 ```
 
+Web app runs on `http://localhost:5173`
+
 ### Using the App
 
-1. **Load a Video**: Paste a YouTube URL and click "Load"
-2. **Watch & Learn**: Video plays on the left (60% width)
-3. **Ask Questions**: Use the Chat tab to ask questions about the content
-4. **Take Notes**: Switch to Notes tab to create timestamped notes
-5. **Export Notes**: Download your notes as Markdown
+1. Open your browser to `http://localhost:5173`
+2. **Load a Video**: Paste a YouTube URL and click "Load"
+3. **Watch & Learn**: Video plays on the left (60% width)
+4. **Ask Questions**: Use the Chat tab to ask questions about the content
+5. **Take Notes**: Switch to Notes tab to create timestamped notes
+6. **Export Notes**: Download your notes as Markdown
 
 ## Project Structure
 
 ```
 Grasp/
 ├── backend/
-│   ├── main.py                      # FastAPI app
+│   ├── main.py                      # FastAPI app entry point
 │   ├── services/
 │   │   ├── youtube_service.py       # Video & transcript extraction
 │   │   ├── embedding_service.py     # OpenAI embeddings
@@ -161,19 +164,20 @@ Grasp/
 │   │   └── chroma_manager.py        # ChromaDB operations
 │   └── requirements.txt
 │
-├── electron-app/
+├── frontend/
 │   ├── src/
-│   │   ├── main/                    # Electron main process
-│   │   ├── preload/                 # Preload scripts
-│   │   └── renderer/src/
-│   │       ├── components/          # React components
-│   │       │   ├── VideoPlayer.tsx
-│   │       │   ├── ChatInterface.tsx
-│   │       │   └── NotesPanel.tsx
-│   │       ├── services/api.ts      # Backend API client
-│   │       ├── store/               # Zustand state
-│   │       └── App.tsx
-│   └── package.json
+│   │   ├── components/              # React components
+│   │   │   ├── VideoPlayer.tsx
+│   │   │   ├── ChatInterface.tsx
+│   │   │   └── NotesPanel.tsx
+│   │   ├── services/
+│   │   │   └── api.ts               # Backend API client
+│   │   ├── store/
+│   │   │   └── learningStore.ts     # Zustand state
+│   │   └── App.tsx
+│   ├── dist/                        # Build output (static files)
+│   ├── package.json
+│   └── vite.config.ts
 │
 ├── CLAUDE.md                        # Development guide
 └── README.md                        # This file
@@ -211,16 +215,18 @@ pytest tests/ -v
 
 **Frontend:**
 ```bash
-cd electron-app
+cd frontend
 npm test
 ```
 
 ### Building for Production
 
 ```bash
-cd electron-app
+cd frontend
 npm run build
 ```
+
+This creates optimized static files in `frontend/dist/` that can be deployed to any static hosting service (Vercel, Netlify, GitHub Pages, etc.) or served with Nginx/Apache.
 
 ### CI/CD
 
@@ -230,7 +236,7 @@ The project uses GitHub Actions for automated testing, security scanning, and re
   - Backend tests (Python 3.11, 3.12)
   - Frontend tests (Vitest)
   - Linting (flake8, ESLint)
-  - Multi-platform builds (Ubuntu, macOS, Windows)
+  - Web build validation
 
 - **Security Scanning**: Weekly automated scans
   - CodeQL analysis
@@ -240,7 +246,7 @@ The project uses GitHub Actions for automated testing, security scanning, and re
 - **Automated Releases**: Tag-based releases
   - Create tag: `git tag -a v1.0.0 -m "Release v1.0.0"`
   - Push: `git push origin v1.0.0`
-  - GitHub Actions builds and publishes installers
+  - GitHub Actions builds and publishes web archives (tar.gz, zip)
 
 - **Dependabot**: Weekly dependency updates
 
@@ -286,6 +292,12 @@ See [CI_CD.md](CI_CD.md) for complete CI/CD documentation.
 - YouTube IFrame API with custom controls
 - Seek bar uses ref to pause timestamp updates while dragging
 - Player fully reinitializes when switching videos
+
+### Web Architecture
+- Frontend: Static single-page application (SPA)
+- Backend: Local FastAPI server with CORS enabled
+- Communication: RESTful API via Axios
+- Deployment: Any static hosting + backend on server/localhost
 
 ## Contributing
 

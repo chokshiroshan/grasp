@@ -12,12 +12,31 @@ jobs:
   create-release:
     name: Create Release
     runs-on: ubuntu-latest
-    outputs:
-      release_id: ${{ steps.create_release.outputs.id }}
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: ./frontend
+        run: npm ci
+
+      - name: Build web app
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Create release archive
+        run: |
+          cd frontend/dist
+          tar -czf ../../grasp-web-${{ github.ref_name }}.tar.gz .
+          cd ../..
+          zip -r grasp-web-${{ github.ref_name }}.zip frontend/dist
 
       - name: Create Release
         id: create_release
@@ -36,60 +55,38 @@ jobs:
 
             ## Installation
 
-            ### macOS
-            Download `Grasp-${{ github.ref_name }}-mac.dmg`
+            ### Web Application
 
-            ### Windows
-            Download `Grasp-${{ github.ref_name }}-win.exe`
+            Grasp is now a web application. Download the build artifacts and deploy to any static hosting service:
 
-            ### Linux
-            Download `Grasp-${{ github.ref_name }}-linux.AppImage`
+            - **tar.gz**: `grasp-web-${{ github.ref_name }}.tar.gz`
+            - **zip**: `grasp-web-${{ github.ref_name }}.zip`
 
-  build-and-upload:
-    name: Build ${{ matrix.os }}
-    needs: create-release
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        include:
-          - os: macos-latest
-            artifact_name: Grasp-mac.dmg
-            asset_name: Grasp-${{ github.ref_name }}-mac.dmg
-          - os: ubuntu-latest
-            artifact_name: Grasp-linux.AppImage
-            asset_name: Grasp-${{ github.ref_name }}-linux.AppImage
-          - os: windows-latest
-            artifact_name: Grasp-win.exe
-            asset_name: Grasp-${{ github.ref_name }}-win.exe
+            ### Deployment Options
+            - Vercel, Netlify, or any static host
+            - Nginx/Apache with the extracted files
+            - Python: `python -m http.server` in the dist folder
 
-    steps:
-      - uses: actions/checkout@v4
+            ### Backend Required
+            The web app requires the Python backend to be running on `http://localhost:8000`.
+            See the README for backend setup instructions.
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: electron-app/package-lock.json
-
-      - name: Install dependencies
-        working-directory: ./electron-app
-        run: npm ci
-
-      - name: Build and package Electron app
-        working-directory: ./electron-app
-        run: |
-          npm run build
-          # Add packaging command here when electron-builder is configured
-          # npm run package
-
-      - name: Upload Release Asset
+      - name: Upload tar.gz
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./electron-app/dist/${{ matrix.artifact_name }}
-          asset_name: ${{ matrix.asset_name }}
-          asset_content_type: application/octet-stream
-        continue-on-error: true
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./grasp-web-${{ github.ref_name }}.tar.gz
+          asset_name: grasp-web-${{ github.ref_name }}.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload zip
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./grasp-web-${{ github.ref_name }}.zip
+          asset_name: grasp-web-${{ github.ref_name }}.zip
+          asset_content_type: application/zip

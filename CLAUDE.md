@@ -4,24 +4,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Grasp is an AI-powered desktop application for interactive learning from YouTube videos (focused on ML lectures). It combines video playback with an AI chatbot that has full video context, generates study materials, and learns user patterns over time.
+Grasp is an AI-powered web application for interactive learning from YouTube videos (focused on ML lectures). It combines video playback with an AI chatbot that has full video context, generates study materials, and learns user patterns over time.
 
 ## Tech Stack
 
-- **Frontend**: Electron + React + TypeScript + Tailwind CSS + Zustand (state) + React Query
-- **Backend**: Python FastAPI (local server)
+- **Frontend**: Vite + React + TypeScript + Tailwind CSS + Zustand (state) + Axios (HTTP client)
+- **Backend**: Python FastAPI (local server with CORS)
 - **Database**: SQLite (structured data) + ChromaDB (vector store)
 - **AI**: Multi-LLM support (Claude/OpenAI/Gemini for chat), OpenAI text-embedding-3-small (embeddings)
 - **Video**: YouTube iframe API, yt-dlp (transcript extraction)
 
 ## Build & Run Commands
 
-### Frontend (Electron App)
+### Frontend (Vite Web App)
 ```bash
-cd electron-app
+cd frontend
 npm install
-npm start          # Development mode
-npm run build      # Production build
+npm run dev        # Development mode (http://localhost:5173)
+npm run build      # Production build (outputs to dist/)
+npm run preview    # Preview production build
 ```
 
 ### Backend (FastAPI Server)
@@ -63,19 +64,22 @@ LOG_LEVEL=INFO
 
 ```
 project-root/
-├── electron-app/              # Electron + React + TypeScript (electron-vite)
+├── frontend/                  # Vite + React + TypeScript web app
 │   ├── src/
-│   │   ├── main/              # Electron main process
-│   │   ├── preload/           # Preload scripts
-│   │   └── renderer/src/      # React app
-│   │       ├── components/    # VideoPlayer, ChatInterface, NotesPanel
-│   │       ├── services/api.ts
-│   │       ├── store/learningStore.ts
-│   │       └── App.tsx
-│   └── package.json
+│   │   ├── components/        # VideoPlayer, ChatInterface, NotesPanel
+│   │   ├── services/
+│   │   │   └── api.ts         # Backend API client (Axios)
+│   │   ├── store/
+│   │   │   └── learningStore.ts    # Zustand state management
+│   │   ├── types/             # TypeScript type definitions
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── dist/                  # Build output (static files)
+│   ├── package.json
+│   └── vite.config.ts
 │
 ├── backend/                   # Python FastAPI server
-│   ├── main.py                # FastAPI app entry point
+│   ├── main.py                # FastAPI app entry point (with CORS)
 │   ├── services/
 │   │   ├── youtube_service.py      # yt-dlp transcript extraction
 │   │   ├── embedding_service.py    # OpenAI embeddings
@@ -125,6 +129,7 @@ project-root/
 - Split-pane layout: Video (60%) | Chat/Notes/Quiz tabs (40%)
 - Color accents: Chat (blue), Notes (green), Quiz (orange), Flashcards (purple)
 - Monospace font for code blocks, sans-serif (Inter/System UI) for text
+- Responsive design for web browsers
 
 ## Important UI Implementation Details
 
@@ -143,6 +148,13 @@ project-root/
 - Zustand store in `learningStore.ts` manages global state
 - Video player state (timestamp, playing status) synced to store
 - Messages and notes loaded once per video and cached
+- No persistence to localStorage (session-based state)
+
+### API Communication
+- Axios for HTTP requests to backend
+- Base URL configured for localhost:8000 (development)
+- CORS enabled on backend for cross-origin requests
+- Error handling with user-friendly messages
 
 ## Troubleshooting
 
@@ -157,6 +169,8 @@ project-root/
 - **Seek bar jumping**: Fixed with `isSeekingRef` to pause updates while dragging
 - **Chat going blank**: Fixed by keeping tabs mounted (hidden) instead of unmounting
 - **context_chunks.map error**: Fixed by checking `Array.isArray()` before mapping
+- **CORS errors**: Ensure backend is running with CORS enabled (configured in main.py)
+- **Cannot connect to backend**: Verify backend is running on localhost:8000
 
 ## Testing
 
@@ -168,6 +182,33 @@ pytest tests/ -v
 
 ### Frontend Tests
 ```bash
-cd electron-app
+cd frontend
 npm test
 ```
+
+## Deployment
+
+### Frontend (Static Hosting)
+```bash
+cd frontend
+npm run build
+# Upload dist/ contents to:
+# - Vercel
+# - Netlify
+# - GitHub Pages
+# - Any static hosting service
+```
+
+### Backend (Server/VPS)
+```bash
+cd backend
+# Install dependencies
+pip install -r requirements.txt
+# Configure environment
+cp .env.example .env
+# Edit .env with production API keys
+# Run with uvicorn
+uvicorn main:app --host 0.0.0.0 --port 8000
+```
+
+**Note**: Frontend needs to be configured to point to backend URL in production (update API base URL in `frontend/src/services/api.ts`).

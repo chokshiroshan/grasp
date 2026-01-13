@@ -47,11 +47,11 @@ The Grasp project uses **GitHub Actions** for CI/CD automation with the followin
   3. Lint frontend with ESLint
 
 #### Build
-- Runs on: Ubuntu, macOS, Windows (matrix)
+- Runs on: Ubuntu Latest
 - Depends on: Backend and Frontend tests passing
 - Steps:
-  1. Build Electron app for each platform
-  2. Upload build artifacts (retained for 7 days)
+  1. Build web application (Vite production build)
+  2. Upload build artifacts from `frontend/dist/` (retained for 7 days)
 
 ### 2. Release Workflow (`.github/workflows/release.yml`)
 
@@ -64,11 +64,11 @@ The Grasp project uses **GitHub Actions** for CI/CD automation with the followin
 - Generates release notes from CHANGELOG.md
 
 #### Build and Upload
-- Builds Electron app for macOS, Linux, Windows
-- Uploads platform-specific installers to the release:
-  - `Grasp-vX.X.X-mac.dmg`
-  - `Grasp-vX.X.X-linux.AppImage`
-  - `Grasp-vX.X.X-win.exe`
+- Builds web application (Vite production build)
+- Creates compressed archives of the build
+- Uploads web build archives to the release:
+  - `grasp-web-vX.X.X.tar.gz` (tar.gz format)
+  - `grasp-web-vX.X.X.zip` (zip format)
 
 ### 3. Security Workflow (`.github/workflows/security.yml`)
 
@@ -171,7 +171,7 @@ git push -u origin main
 - 📦 Dependency updates
 
 **On Tagged Release (e.g., `v1.0.0`):**
-- 🚀 Build and publish installers
+- 🚀 Build and publish web archives
 
 ### Manual Workflow Runs
 
@@ -199,7 +199,7 @@ Use [Semantic Versioning](https://semver.org/):
 vim CHANGELOG.md
 
 # 2. Update version in package.json
-cd electron-app
+cd frontend
 npm version 1.0.0 --no-git-tag-version
 cd ..
 
@@ -214,8 +214,9 @@ git push origin v1.0.0
 
 # 5. GitHub Actions will automatically:
 #    - Create GitHub release
-#    - Build installers for all platforms
-#    - Upload installers to release
+#    - Build web application
+#    - Create tar.gz and zip archives
+#    - Upload archives to release
 ```
 
 ### Pre-release
@@ -251,17 +252,16 @@ safety check
 
 **Frontend:**
 ```bash
-cd electron-app
+cd frontend
 
 # Tests
 npm test -- --run
 
 # Linting
 npm run lint
-npm run type-check
 
-# Formatting
-npm run format
+# Build
+npm run build
 
 # Security
 npm audit
@@ -302,12 +302,13 @@ Add these badges to your README.md to show build status:
 **Frontend Tests Fail:**
 - Verify Node.js version (should be 20)
 - Check for missing dependencies
-- Ensure vitest.config.ts is correct
+- Ensure test configuration is correct
 
 **Build Fails:**
-- Check electron-vite configuration
+- Check vite.config.ts configuration
 - Verify all source files are included
-- Check platform-specific issues in logs
+- Check for TypeScript errors
+- Ensure dependencies are installed
 
 ### Common Issues
 
@@ -333,11 +334,11 @@ Add these badges to your README.md to show build status:
 - Unlimited for public repos
 
 **Current workflow usage per run:**
-- CI: ~10-15 minutes
+- CI: ~5-10 minutes (faster without multi-platform builds)
 - Security: ~5-10 minutes
-- Release: ~20-30 minutes
+- Release: ~5-10 minutes (single web build)
 
-**Monthly estimate:** ~500 minutes (well within free tier)
+**Monthly estimate:** ~200-300 minutes (well within free tier)
 
 ### Optimization Tips
 
@@ -353,9 +354,11 @@ Potential improvements to consider:
 1. **E2E Testing**: Add Playwright/Cypress for end-to-end tests
 2. **Performance Testing**: Add lighthouse CI for performance monitoring
 3. **Docker**: Containerize backend for consistent environments
-4. **Auto-deploy**: Deploy to cloud platforms on release
-5. **Changelog Generator**: Auto-generate changelog from commits
-6. **Version Bumping**: Automate version bumping based on commits
+4. **Auto-deploy**: Deploy frontend to Vercel/Netlify on release
+5. **Preview Deployments**: Deploy PRs to preview environments
+6. **Changelog Generator**: Auto-generate changelog from commits
+7. **Version Bumping**: Automate version bumping based on commits
+8. **Backend Deployment**: Add workflow for deploying backend to VPS/cloud
 
 ## Resources
 
