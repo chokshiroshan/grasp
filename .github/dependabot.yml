@@ -18,7 +18,7 @@ updates:
 
   # Frontend npm dependencies
   - package-ecosystem: "npm"
-    directory: "/electron-app"
+    directory: "/frontend"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -30,10 +30,6 @@ updates:
       - "frontend"
     commit-message:
       prefix: "build(frontend)"
-    ignore:
-      # Ignore major version updates for stable dependencies
-      - dependency-name: "electron"
-        update-types: ["version-update:semver-major"]
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
